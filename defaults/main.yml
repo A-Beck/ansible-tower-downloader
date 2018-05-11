@@ -1,0 +1,9 @@
+---
+ansible_tower_setup_base_url: 'https://releases.ansible.com/ansible-tower/setup/'
+ansible_tower_setup_version: 'latest'
+ansible_tower_setup_url: "{{ ansible_tower_setup_base_url }}/ansible-tower-setup-{{ ansible_tower_setup_version }}.tar.gz"
+ansible_tower_setup_download_location: "{{ playbook_dir }}"
+ansible_tower_setup_unarchive_location: "{{ ansible_tower_setup_download_location }}"
+ansible_tower_setup_friendly_name: ansible-tower-setup
+ansible_tower_create_destinations: yes
+ansible_tower_force_download: yes

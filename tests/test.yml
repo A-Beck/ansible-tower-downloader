@@ -1,0 +1,64 @@
+---
+
+- name: Start up a CentOS 7 container for testing
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  become: yes
+  tasks:
+
+    - docker_container:
+        name: ansible_downloader_test
+        image: docker.io/centos:7
+        detach: yes
+        command: bash
+        tty: yes
+
+    - add_host:
+        name: ansible_downloader_test
+        groups: tower
+        admin_password: 'tower'
+        pg_host: ''
+        pg_port: ''
+        pg_database: 'awx'
+        pg_username: 'awx'
+        pg_password: 'tower'
+        rabbitmq_port: 5672
+        rabbitmq_vhost: tower
+        rabbitmq_username: tower
+        rabbitmq_password: 'tower'
+        rabbitmq_cookie: cookiemonster
+        rabbitmq_use_long_name: false
+
+- name: Download the Ansible Tower Installer Tarball
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+
+    - name: Download the Ansible Tower Installer
+      import_role:
+        name: ansible-tower-downloader
+      vars:
+        ansible_tower_setup_version: '3.2.4'
+
+- name: Inovke preflight role from Ansible Tower Installer on Remote host
+  hosts: tower
+  connection: docker
+  gather_facts: yes
+  tasks:
+
+    - name: Ensure that roles from the downloaded Ansible setup module can be included
+      include_role: 
+        name: "{{ playbook_dir }}/ansible-tower-setup/roles/preflight"
+
+
+- name: Clean up CentOS 7 container
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  become: yes
+  tasks:
+    - docker_container:
+        name: ansible_downloader_test
+        state: absent

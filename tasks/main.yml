@@ -1,0 +1,32 @@
+---
+- name: Ensure directory we will download the tarball into exists
+  file:
+    state: directory
+    path: "{{ item }}"
+  loop:  
+    - "{{ ansible_tower_setup_download_location }}"
+    - "{{ ansible_tower_setup_unarchive_location }}"
+  when: ansible_tower_create_destinations|bool
+
+- name: Download the Ansible Tower setup tarball
+  get_url:
+    url: "{{ ansible_tower_setup_url }}"
+    dest: "{{ ansible_tower_setup_download_location }}"
+    url_username: "{{ ansible_tower_setup_download_username | default( omit ) }}"
+    url_password: "{{ ansible_tower_setup_download_password | default( omit ) }}"
+    force: "{{ ansible_tower_force_download|bool }}"
+  register: ansible_tower_setup_tarball
+
+- name: Extract the Ansible Tower Setup Tarball
+  unarchive:
+    src: "{{ ansible_tower_setup_tarball['dest'] }}"
+    dest: "{{ ansible_tower_setup_unarchive_location }}"
+    remote_src: yes
+    list_files: yes
+  register: ansible_tower_setup_tarball_contents
+
+- name: Set friendly name for the Ansible Tower installer directory
+  file:
+    state: link
+    src: "{{ ansible_tower_setup_unarchive_location }}/{{ ansible_tower_setup_tarball_contents['files']|first }}"
+    dest: "{{ ansible_tower_setup_unarchive_location }}/{{ ansible_tower_setup_friendly_name }}"
